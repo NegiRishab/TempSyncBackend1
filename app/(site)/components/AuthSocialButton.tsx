@@ -4,15 +4,18 @@ import { IconType } from "react-icons";
 interface socialicon {
   icon: IconType;
   onClick: () => void;
+  disabled:boolean;
 }
 const AuthSocialButton: React.FC<socialicon> = ({
   icon: Icon,
   onClick,
+  disabled
 }) => {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className="
     inline-flex
     w-full 
@@ -21,7 +24,7 @@ const AuthSocialButton: React.FC<socialicon> = ({
     bg-white 
     px-4 
     py-2 
-    text-gray-500 
+    text-blue-700 
     shadow-sm 
     ring-1 
     ring-inset 

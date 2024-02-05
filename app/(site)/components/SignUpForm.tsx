@@ -1,12 +1,17 @@
 "use client";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/Input";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { BsGithub, BsGoogle } from "react-icons/bs";
 import AuthSocialButton from "./AuthSocialButton";
+import axios from "axios";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 type variant = "Login" | "Register";
 export default function SignUpForm() {
+  const session = useSession();
+  const router = useRouter();
   const [variant, setVariant] = useState<variant>("Login");
   const [isloading, setIsLoding] = useState(false);
   const toggleVariant = useCallback(() => {
@@ -27,18 +32,64 @@ export default function SignUpForm() {
       password: "",
     },
   });
+  useEffect(() => {
+    if (session?.status === "authenticated") {
+      router.push("/users");
+    }
+  }, [session?.status, router]);
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
-    console.log(data)
     setIsLoding(true);
     if (variant === "Login") {
-      // trigger login api
+      signIn("credentials", {
+        ...data,
+        redirect: false,
+      })
+        .then(() => {
+          router.push("/users");
+        })
+        .catch((err: any) => {
+          console.log(err);
+        })
+        .finally(() => {
+          setIsLoding(false);
+        });
     }
     if (variant === "Register") {
-      // trigger signup api
+      axios
+        .post("api/register", data)
+        .then(() =>
+          signIn("credentials", {
+            ...data,
+            redirect: false,
+          }))
+        .then((callback) => {
+          if (callback?.error) {
+            console.log('Invalid credentials!');
+          }
+          if(callback?.ok){
+            router.push('/users')
+          }
+        })
+        .catch((err: any) => {
+          console.log(err);
+        })
+        .finally(() => {
+          setIsLoding(false);
+        });
     }
   };
   const socialAction = (action: string) => {
     setIsLoding(true);
+    signIn(action, { redirect: false })
+      .then(() => {
+        router.push("/users");
+      })
+      .catch((err: any) => {
+        console.log(err);
+      })
+      .finally(() => {
+        setIsLoding(false);
+      });
   };
   return (
     <div
@@ -61,7 +112,13 @@ export default function SignUpForm() {
       >
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {variant === "Register" && (
-            <Input id="name" register={register} label="Name" errors={errors} />
+            <Input
+              id="name"
+              register={register}
+              label="Name"
+              errors={errors}
+              disabled={isloading}
+            />
           )}
           <Input
             id="email"
@@ -69,6 +126,7 @@ export default function SignUpForm() {
             register={register}
             label="Email address"
             errors={errors}
+            disabled={isloading}
           />
           <Input
             id="password"
@@ -76,6 +134,7 @@ export default function SignUpForm() {
             register={register}
             label="Password"
             errors={errors}
+            disabled={isloading}
           />
           <div>
             <Button disabled={isloading} type="submit" fullWidth>
@@ -98,10 +157,12 @@ export default function SignUpForm() {
             <AuthSocialButton
               icon={BsGithub}
               onClick={() => socialAction("github")}
+              disabled={isloading}
             />
             <AuthSocialButton
               icon={BsGoogle}
               onClick={() => socialAction("google")}
+              disabled={isloading}
             />
           </div>
         </div>
@@ -113,7 +174,6 @@ export default function SignUpForm() {
             text-sm 
             mt-6 
             px-2 
-            text-gray-500
           "
         >
           <div>
@@ -121,9 +181,8 @@ export default function SignUpForm() {
               ? "New to PokemonWorld?"
               : "Already have an account?"}
           </div>
-          <div   onClick={toggleVariant} 
-            className="underline cursor-pointer">
-          {variant ==='Login' ? 'Create an account' : 'Login'}
+          <div onClick={toggleVariant} className=" cursor-pointer text-blue-800">
+            {variant === "Login" ? "Create an account" : "Login"}
           </div>
         </div>
       </div>

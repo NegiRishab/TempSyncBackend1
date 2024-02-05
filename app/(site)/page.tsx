@@ -17,13 +17,11 @@ export default function Home() {
         <img
           src={image.src}
           alt="logo image"
-          height="48"
-          width="48"
-          className="mx-auto w-auto"
+          className="mx-auto w-28"
         />
         <h2
           className="
-                mt-6
+               
                 text-center
                 text-2xl
                 font-bold
