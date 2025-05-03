@@ -8,7 +8,6 @@ import { AuthModule } from './controllers/auth/auth.module';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { DataSourceOptions } from 'typeorm';
-import { ClinicModule } from './controllers/clinic/clinic.module';
 
 
 @Module({
@@ -58,7 +57,6 @@ import { ClinicModule } from './controllers/clinic/clinic.module';
 		}),
 		UsersModule,
 		AuthModule,
-		ClinicModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
