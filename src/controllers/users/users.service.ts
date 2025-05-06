@@ -1,17 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
-import * as moment from 'moment';
-import { UserEntity } from './entities/user.entity';
-import { VERIFICATION_CODES_EXPIRATION } from 'src/common/constants';
-import { STATUS, VERIFICATION_CODE_TYPES } from 'src/common/enums';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { FindManyOptions, FindOneOptions, Repository } from "typeorm";
+import { UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) { }
+  ) {}
 
   /**
    * Create user
@@ -22,7 +19,7 @@ export class UsersService {
     try {
       return await this.userRepository.create(createUserDto).save();
     } catch (error) {
-      console.error('[UsersService]:[create]:', error.message);
+      console.error("[UsersService]:[create]:", error);
       throw error;
     }
   }
@@ -36,7 +33,7 @@ export class UsersService {
     try {
       return await this.userRepository.findOne(findOptions);
     } catch (error) {
-      console.error('[UsersService]:[findOne]:', error);
+      console.error("[UsersService]:[findOne]:", error);
       throw error;
     }
   }
@@ -48,56 +45,27 @@ export class UsersService {
    */
   async find(findOptions: FindManyOptions<UserEntity>) {
     try {
-      const [items, total] = await this.userRepository.findAndCount(findOptions);
+      const [items, total] =
+        await this.userRepository.findAndCount(findOptions);
       return {
         items,
         total,
       };
     } catch (error) {
-      console.error('[UsersService]:[find]:', error);
+      console.error("[UsersService]:[find]:", error);
       throw error;
     }
   }
 
-  async findOneAndUpdate(id:string,updateData: Partial<UserEntity>) {
+  async findOneAndUpdate(id: string, updateData: Partial<UserEntity>) {
     try {
-     return await this.userRepository.update(id, updateData);
+      return await this.userRepository.update(id, updateData);
     } catch (error) {
-      console.error('[UsersService]:[findOneAndUpdate]:', error);
+      console.error("[UsersService]:[findOneAndUpdate]:", error);
       throw error;
     }
   }
-  
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // const usersToUpdate = [
 //   { id: 1, name: 'Alice', email: 'alice@example.com' },
@@ -116,7 +84,7 @@ export class UsersService {
 
 // const query = `
 //   UPDATE users
-//   SET 
+//   SET
 //     name = CASE ${nameCases} END,
 //     email = CASE ${emailCases} END
 //   WHERE id IN (${ids});

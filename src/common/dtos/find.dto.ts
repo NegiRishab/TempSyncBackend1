@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer';
+import { Transform } from "class-transformer";
 import {
   IsNotEmpty,
   IsNumber,
@@ -6,11 +6,10 @@ import {
   IsOptional,
   IsString,
   Min,
-} from 'class-validator';
-import { ERRORS } from '../constants';
+} from "class-validator";
+import { ERRORS } from "../constants";
 
 class Filter {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -21,7 +20,7 @@ class ColumnSorting {
 
   @IsNotEmpty({ message: ERRORS.COMMON.COLUMN_DIRECTION_IS_REQUIRED })
   @IsString({ message: ERRORS.COMMON.COLUMN_DIRECTION_IS_INVALID })
-  direction: 'ASC' | 'DESC';
+  direction: "ASC" | "DESC";
 }
 
 export class FindDto {

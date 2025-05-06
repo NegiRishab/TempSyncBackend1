@@ -5,8 +5,8 @@ import {
   IsString,
   IsStrongPassword,
   IsUUID,
-} from 'class-validator';
-import { ERRORS } from '../../../common/constants/index';
+} from "class-validator";
+import { ERRORS } from "../../../common/constants/index";
 
 export class InviteUserDto {
   @IsNotEmpty({ message: ERRORS.USER.FIRST_NAME_IS_REQUIRED })
@@ -48,10 +48,10 @@ export class UpdateUserDto {
   @IsOptional({ message: ERRORS.USER.LAST_NAME_IS_INVALID })
   lastName: string;
 
-  @IsOptional({message: ERRORS.USER.LANGUAGE_IS_INVALID})
+  @IsOptional({ message: ERRORS.USER.LANGUAGE_IS_INVALID })
   language: string;
 
-  @IsOptional({message: ERRORS.USER.USER_ROLE_IS_INVALID})
+  @IsOptional({ message: ERRORS.USER.USER_ROLE_IS_INVALID })
   role: string;
 }
 

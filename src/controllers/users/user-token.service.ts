@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { UserTokensEntity } from './entities/userTokens.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, Repository } from 'typeorm';
+import { Injectable } from "@nestjs/common";
+import { UserTokensEntity } from "./entities/userTokens.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { FindOneOptions, Repository } from "typeorm";
 
 @Injectable()
 export class UserTokenService {
@@ -15,23 +15,16 @@ export class UserTokenService {
    * @param createUserDto
    * @returns
    */
-  private async create(payload: {
-    token: string;
-    refreshToken: string;
-    userId: string;
-  }) {
+  async createToken(userId: string, refreshToken: string) {
     try {
-      return await this.userTokenRepository
-        .create({
-          token: payload.token,
-          refreshToken: payload.refreshToken,
-          user: {
-            id: payload.userId,
-          },
-        })
-        .save();
+      const tokenEntity = this.userTokenRepository.create({
+        token: refreshToken,
+        user: { id: userId },
+      });
+
+      return await this.userTokenRepository.save(tokenEntity);
     } catch (error) {
-      console.error('[UserTokenService]:[create]:', error.message);
+      console.error("[UserTokenService]:[createToken]:", error);
       throw error;
     }
   }
@@ -45,7 +38,7 @@ export class UserTokenService {
     try {
       return await this.userTokenRepository.findOne(findOptions);
     } catch (error) {
-      console.error('[UserTokenService]:[findOne]:', error);
+      console.error("[UserTokenService]:[findOne]:", error);
       throw error;
     }
   }
@@ -56,64 +49,61 @@ export class UserTokenService {
    * @param updatePayload
    * @returns
    */
-  async saveTokens(
-    userId: string,
-    updatePayload: { token: string; refreshToken: string },
-  ) {
-    try {
-      const userToken = await this.userTokenRepository.findOne({
-        where: {
-          user: {
-            id: userId,
-          },
-        },
-      });
+  // async saveTokens(userId: string, updatePayload: { refreshToken: string }) {
+  //   try {
+  //     const userToken = await this.userTokenRepository.findOne({
+  //       where: {
+  //         user: {
+  //           id: userId,
+  //         },
+  //       },
+  //     });
 
-      if (!userToken) {
-        return await this.create({
-          token: updatePayload.token,
-          refreshToken: updatePayload.token,
-          userId,
-        });
-      }
+  //     if (!userToken) {
+  //       return await this.create({
+  //         token: updatePayload.token,
+  //         refreshToken: updatePayload.token,
+  //         userId,
+  //       });
+  //     }
 
-      userToken.token = updatePayload.token;
-      userToken.refreshToken = updatePayload.refreshToken;
+  //     userToken.token = updatePayload.token;
+  //     userToken.refreshToken = updatePayload.refreshToken;
 
-      return await userToken.save();
-    } catch (error) {
-      console.error('[UserTokenService]:[saveTokens]:', error);
-      throw error;
-    }
-  }
+  //     return await userToken.save();
+  //   } catch (error) {
+  //     console.error("[UserTokenService]:[saveTokens]:", error);
+  //     throw error;
+  //   }
+  // }
 
   /**
    * Find one user and remove tokens
    * @param userId
    * @returns
    */
-  async removeTokens(userId: string) {
-    try {
-      const userToken = await this.userTokenRepository.findOne({
-        where: {
-          user: {
-            id: userId,
-          },
-        },
-      });
+  // async removeTokens(userId: string) {
+  //   try {
+  //     const userToken = await this.userTokenRepository.findOne({
+  //       where: {
+  //         user: {
+  //           id: userId,
+  //         },
+  //       },
+  //     });
 
-      if (!userToken) {
-        return true;
-      }
+  //     if (!userToken) {
+  //       return true;
+  //     }
 
-      userToken.token = '';
-      userToken.refreshToken = '';
+  //     userToken.token = "";
+  //     userToken.refreshToken = "";
 
-      await userToken.save();
-      return true;
-    } catch (error) {
-      console.error('[UserTokenService]:[removeTokens]:', error);
-      throw error;
-    }
-  }
+  //     await userToken.save();
+  //     return true;
+  //   } catch (error) {
+  //     console.error("[UserTokenService]:[removeTokens]:", error);
+  //     throw error;
+  //   }
+  // }
 }
