@@ -16,5 +16,5 @@ export class Organization extends Base {
   address: string;
 
   @Column({ type: "boolean", nullable: false, default: false })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

@@ -20,8 +20,8 @@ export class UserTokenService {
       const tokenEntity = this.userTokenRepository.create({
         token: refreshToken,
         user: { id: userId },
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       });
-
       return await this.userTokenRepository.save(tokenEntity);
     } catch (error) {
       console.error("[UserTokenService]:[createToken]:", error);
@@ -82,28 +82,13 @@ export class UserTokenService {
    * @param userId
    * @returns
    */
-  // async removeTokens(userId: string) {
-  //   try {
-  //     const userToken = await this.userTokenRepository.findOne({
-  //       where: {
-  //         user: {
-  //           id: userId,
-  //         },
-  //       },
-  //     });
-
-  //     if (!userToken) {
-  //       return true;
-  //     }
-
-  //     userToken.token = "";
-  //     userToken.refreshToken = "";
-
-  //     await userToken.save();
-  //     return true;
-  //   } catch (error) {
-  //     console.error("[UserTokenService]:[removeTokens]:", error);
-  //     throw error;
-  //   }
-  // }
+  async removeTokens(token: string) {
+    try {
+      await this.userTokenRepository.update({ token }, { is_revoked: true });
+      return true;
+    } catch (error) {
+      console.error("[UserTokenService]:[removeTokens]:", error);
+      throw error;
+    }
+  }
 }

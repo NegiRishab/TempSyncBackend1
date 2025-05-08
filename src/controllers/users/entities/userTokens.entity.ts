@@ -20,17 +20,17 @@ export class UserTokensEntity {
   token: string;
 
   @Column({ type: "varchar", nullable: true })
-  ipAddress: string;
+  ip_address: string;
 
   @Column({ type: "varchar", nullable: true })
-  userAgent: string;
+  user_agent: string;
 
   @Column({ type: "boolean", default: false })
-  isRevoked: boolean;
+  is_revoked: boolean;
 
   @Column({ type: "timestamp", nullable: false })
-  createdAt: Date;
+  created_at: Date;
 
   @Column({ type: "timestamp", nullable: false })
-  expiresAt: Date;
+  expires_at: Date;
 }

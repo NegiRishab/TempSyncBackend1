@@ -6,12 +6,13 @@ import {
   HttpStatus,
   HttpCode,
   Logger,
-  //   Req,
-  //   UseGuards,
-  //   Get,
+  UseGuards,
+  Req,
+  Res,
+  Get,
 } from "@nestjs/common";
 import { UsersService } from "../../controllers/users/users.service";
-import { SignUpDto } from "./dto/auth.dto";
+import { SigInDto, SignUpDto } from "./dto/auth.dto";
 import { ERRORS } from "src/common/constants";
 import { UtilitiesServices } from "src/common/services/utils.services";
 // import { FindOneOptions } from "typeorm";
@@ -21,7 +22,12 @@ import { UserTokenService } from "../users/user-token.service";
 import { ConfigService } from "@nestjs/config";
 import { OrganizationService } from "../organization/organization.service";
 import { UserRoleEnum } from "src/common/enums";
-
+import { FindOneOptions } from "typeorm";
+import { UserEntity } from "../users/entities/user.entity";
+// import { AccessTokenGuard } from "./guards/accessToken.guard";
+import { RefreshTokenGuard } from "./guards/refreshToken.guard";
+import { Response } from "express";
+import { AccessTokenGuard } from "./guards/accessToken.guard";
 @Controller("auth")
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -41,7 +47,10 @@ export class AuthController {
    */
   @HttpCode(HttpStatus.CREATED)
   @Post("sign-up")
-  async signUp(@Body() createUserDto: SignUpDto) {
+  async signUp(
+    @Body() createUserDto: SignUpDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     try {
       const existingOrganization = await this.organizationService.findOne({
         where: { email: createUserDto.email.toLowerCase() },
@@ -77,8 +86,8 @@ export class AuthController {
       );
 
       const createUserPayload = {
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
+        first_name: createUserDto.firstName,
+        last_name: createUserDto.lastName,
         email: createUserDto.email.toLowerCase(),
         password: this.utilService.encodePassword(createUserDto.password),
         role: UserRoleEnum.owner,
@@ -90,24 +99,28 @@ export class AuthController {
       const tokens = await this.authService.generateTokens({
         id: createdUser.id,
         email: createdUser.email,
+        organizationId: organizationDetails.id,
       });
 
       await this.userTokensService.createToken(
         createdUser.id,
         tokens.refreshToken,
       );
+      res.cookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
       return {
         user: {
-          firstName: createdUser.firstName,
-          lastName: createdUser.lastName,
+          firstName: createdUser.first_name,
+          lastName: createdUser.last_name,
           email: createdUser.email,
           role: createdUser.role,
           organizationId: organizationDetails.id,
           organizationName: organizationDetails.name,
         },
         token: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
       };
     } catch (error) {
       this.logger.error("Sign up error", error);
@@ -120,69 +133,104 @@ export class AuthController {
    * @param createUserDto
    * @returns
    */
-  // @Post("sign-in")
-  // async signIn(@Body() signInDto: SigInDto) {
-  //   try {
-  //     const { email, password }: SigInDto = signInDto;
-  //     /**
-  //      * Find user by email
-  //      */
-  //     const findOptions: FindOneOptions = {
-  //       where: { email },
-  //       select: ["id", "email", "password"],
-  //     };
+  @Post("sign-in")
+  async signIn(
+    @Body() signInDto: SigInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const { email, password }: SigInDto = signInDto;
+      /**
+       * Find user by email
+       */
+      const findOptions: FindOneOptions<UserEntity> = {
+        where: { email },
+        select: ["id", "email", "password"],
+      };
 
-  //     const user = await this.usersService.findOne(findOptions);
+      const user = await this.usersService.findOne(findOptions);
 
-  //     if (!user) {
-  //       throw new HttpException(
-  //         ERRORS.USER.USER_NOT_FOUND,
-  //         HttpStatus.NOT_FOUND,
-  //       );
-  //     }
+      if (!user) {
+        throw new HttpException(
+          ERRORS.USER.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+        );
+      }
 
-  //     /**
-  //      * Validate password
-  //      */
-  //     const isPasswordValid: boolean = this.utilService.isPasswordValid(
-  //       password,
-  //       user.password,
-  //     );
+      /**
+       * Validate password
+       */
+      const isPasswordValid: boolean = this.utilService.isPasswordValid(
+        password,
+        user.password,
+      );
 
-  //     if (!isPasswordValid) {
-  //       throw new HttpException(
-  //         ERRORS.USER.INVALID_CREDENTIALS,
-  //         HttpStatus.NOT_FOUND,
-  //       );
-  //     }
+      if (!isPasswordValid) {
+        throw new HttpException(
+          ERRORS.USER.INVALID_CREDENTIALS,
+          HttpStatus.NOT_FOUND,
+        );
+      }
 
-  //     const tokens = await this.authService.generateTokens({
-  //       id: user.id,
-  //       email: user.email,
-  //     });
+      const tokens = await this.authService.generateTokens({
+        id: user.id,
+        email: user.email,
+        organizationId: user.organization.id,
+      });
 
-  //     await this.userTokensService.saveTokens(user.id, {
-  //       token: tokens.accessToken,
-  //       refreshToken: tokens.refreshToken,
-  //     });
+      await this.userTokensService.createToken(user.id, tokens.refreshToken);
+      res.cookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
-  //     return tokens;
-  //   } catch (error) {
-  //     console.error("[AuthController]:[signIn]:", error);
-  //     throw error;
-  //   }
-  // }
+      return {
+        user: {
+          firstName: user.first_name,
+          lastName: user.last_name,
+          email: user.email,
+          role: user.role,
+          organizationId: user.organization.id,
+          organizationName: user.organization.name,
+        },
+        token: tokens.accessToken,
+      };
+    } catch (error) {
+      console.error("[AuthController]:[signIn]:", error);
+      throw error;
+    }
+  }
 
-  //   @HttpCode(HttpStatus.NO_CONTENT)
-  //   @UseGuards(AccessTokenGuard)
-  //   @Get("logout")
-  //   async logout(@Req() req) {
-  //     try {
-  //       const userId = req.user.sub;
-  //       await this.authService.logout(userId);
-  //     } catch (error) {
-  //       console.error("[AuthController]:[logout]:", error);
-  //       throw error;
-  //     }
-  //   }
+  @UseGuards(RefreshTokenGuard)
+  @Post("refresh")
+  refreshTokens(@Req() req) {
+    const userId: string = req.user.id;
+    const refreshToken: string = req.user.refreshToken;
+    return this.authService.refreshToken(userId, refreshToken);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AccessTokenGuard)
+  @Get("logout")
+  async logout(@Req() req, @Res({ passthrough: true }) res: Response) {
+    try {
+      const refresToken: string = req.user.refreshToken;
+      if (!refresToken) {
+        throw new HttpException(
+          ERRORS.AUTH.INVALID_REFRESH_TOKEN,
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      await this.userTokensService.removeTokens(refresToken);
+
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+      });
+
+      return { message: "Logged out successfully" };
+    } catch (error) {
+      console.error("[AuthController]:[logout]:", error);
+      throw error;
+    }
+  }
 }

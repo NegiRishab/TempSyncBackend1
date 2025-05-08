@@ -7,6 +7,7 @@ import { AccessTokenStrategy } from "./strategies/accessToken.strategy";
 import { RefreshTokenStrategy } from "./strategies/refreshToken.strategy";
 import { AuthService } from "./auth.service";
 import { UtilsModule } from "src/common/services/utils.module";
+import { OrganizationModule } from "../organization/organization.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UtilsModule } from "src/common/services/utils.module";
       }),
     }),
     UtilsModule,
+    OrganizationModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],

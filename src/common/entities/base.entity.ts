@@ -5,12 +5,12 @@ export abstract class Base extends BaseEntity {
   id: string;
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
-  createdAt: Date;
+  created_at: Date;
 
   @Column({
     type: "timestamp",
     default: () => "CURRENT_TIMESTAMP",
     onUpdate: "CURRENT_TIMESTAMP",
   })
-  updatedAt: Date;
+  updated_at: Date;
 }

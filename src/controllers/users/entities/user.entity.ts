@@ -5,10 +5,10 @@ import { Organization } from "../../organization/entities/organization.entity";
 @Entity("users")
 export class UserEntity extends Base {
   @Column({ type: "varchar", nullable: false })
-  firstName: string;
+  first_name: string;
 
   @Column({ type: "varchar", nullable: false })
-  lastName: string;
+  last_name: string;
 
   @Column({ type: "varchar", nullable: false, unique: true })
   email: string;
@@ -24,5 +24,5 @@ export class UserEntity extends Base {
   organization: Organization;
 
   @Column({ type: "boolean", nullable: false, default: true })
-  isActive: boolean;
+  is_active: boolean;
 }

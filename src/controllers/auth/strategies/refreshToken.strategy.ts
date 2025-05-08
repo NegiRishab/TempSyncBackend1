@@ -4,12 +4,7 @@ import { Request } from "express";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { UsersService } from "src/controllers/users/users.service";
-
-type JwtPayload = {
-  sub: string;
-  email: string;
-  accountId: string;
-};
+import { JwtPayload } from "src/common/types/index.type";
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -28,11 +23,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(req: Request, payload: JwtPayload) {
-    const refreshToken = "hello";
-    // const refreshToken = req.get('Authorization').replace('Bearer', '').trim();
+    const refreshToken = req.cookies?.refreshToken;
     const user = await this.userService.findOne({
       where: {
-        id: payload.sub,
+        id: payload.id,
       },
     });
 
