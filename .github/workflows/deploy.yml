@@ -9,25 +9,30 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: Production
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }} 
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '22'
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Build the project
-      run: npm run build
+      - name: Build the project
+        run: npm run build
 
-    - name: Deploy to Render
-      run: |
-        curl -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-          -X POST \
-          -d '{"service_id": "srv-d0eu4l6mcj7s73889bg0"}' \
-          https://api.render.com/v1/services/srv-d0eu4l6mcj7s73889bg0/deploys
+      - name: Run DB migrations
+        run: npm run migration:run
+
+      - name: Deploy to Render
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -X POST \
+            -d '{"service_id": "srv-d0eu4l6mcj7s73889bg0"}' \
+            https://api.render.com/v1/services/srv-d0eu4l6mcj7s73889bg0/deploys
