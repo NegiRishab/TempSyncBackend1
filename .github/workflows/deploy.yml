@@ -1,0 +1,33 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main  # Trigger deploy on pushes to the 'main' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Production  # Use your production environment name in GitHub Actions
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '22'  # Use your desired Node.js version
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build the project
+      run: npm run build
+
+    - name: Deploy to Render
+      run: |
+        curl -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -X POST \
+          -d '{"service_id": "srv-d0eu4l6mcj7s73889bg0"}' \  # Your actual service ID
+          https://api.render.com/v1/services/srv-d0eu4l6mcj7s73889bg0/deploys  # Your actual service ID
