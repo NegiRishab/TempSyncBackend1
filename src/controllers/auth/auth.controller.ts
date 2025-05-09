@@ -26,7 +26,7 @@ import { FindOneOptions } from "typeorm";
 import { UserEntity } from "../users/entities/user.entity";
 // import { AccessTokenGuard } from "./guards/accessToken.guard";
 import { RefreshTokenGuard } from "./guards/refreshToken.guard";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { AccessTokenGuard } from "./guards/accessToken.guard";
 @Controller("auth")
 export class AuthController {
@@ -47,10 +47,7 @@ export class AuthController {
    */
   @HttpCode(HttpStatus.CREATED)
   @Post("sign-up")
-  async signUp(
-    @Body() createUserDto: SignUpDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async signUp(@Body() createUserDto: SignUpDto) {
     try {
       const existingOrganization = await this.organizationService.findOne({
         where: { email: createUserDto.email.toLowerCase() },
@@ -94,34 +91,9 @@ export class AuthController {
         organization: organizationDetails,
       };
 
-      const createdUser = await this.usersService.create(createUserPayload);
+      await this.usersService.create(createUserPayload);
 
-      const tokens = await this.authService.generateTokens({
-        id: createdUser.id,
-        email: createdUser.email,
-        organizationId: organizationDetails.id,
-      });
-
-      await this.userTokensService.createToken(
-        createdUser.id,
-        tokens.refreshToken,
-      );
-      res.cookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-
-      return {
-        user: {
-          firstName: createdUser.first_name,
-          lastName: createdUser.last_name,
-          email: createdUser.email,
-          role: createdUser.role,
-          organizationId: organizationDetails.id,
-          organizationName: organizationDetails.name,
-        },
-        token: tokens.accessToken,
-      };
+      return { message: "User created succesfully" };
     } catch (error) {
       this.logger.error("Sign up error", error);
       throw error;
@@ -146,6 +118,7 @@ export class AuthController {
       const findOptions: FindOneOptions<UserEntity> = {
         where: { email },
         select: ["id", "email", "password"],
+        relations: ["organization"],
       };
 
       const user = await this.usersService.findOne(findOptions);
@@ -209,12 +182,12 @@ export class AuthController {
     return this.authService.refreshToken(userId, refreshToken);
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @UseGuards(AccessTokenGuard)
   @Get("logout")
-  async logout(@Req() req, @Res({ passthrough: true }) res: Response) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     try {
-      const refresToken: string = req.user.refreshToken;
+      const refresToken: string = req.cookies?.refreshToken;
       if (!refresToken) {
         throw new HttpException(
           ERRORS.AUTH.INVALID_REFRESH_TOKEN,
@@ -227,7 +200,7 @@ export class AuthController {
         httpOnly: true,
       });
 
-      return { message: "Logged out successfully" };
+      return { message: "User logout succesfully" };
     } catch (error) {
       console.error("[AuthController]:[logout]:", error);
       throw error;

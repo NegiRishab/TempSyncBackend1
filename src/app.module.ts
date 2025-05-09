@@ -5,40 +5,44 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { UsersModule } from "./controllers/users/users.module";
 import { AuthModule } from "./controllers/auth/auth.module";
-import { DataSourceOptions } from "typeorm";
 import { OrganizationModule } from "./controllers/organization/organization.module";
+import { DataSourceOptions } from "typeorm";
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        console.log("process.env ", process.env);
-        const DB_ENTITIES: string =
-          configService.get("DB_ENTITIES") ?? "dist/**/*.entity.js";
-        const DB_MIGRATIONS: string =
-          configService.get("DB_MIGRATIONS") ?? "dist/migrations/*.js";
-        let sslConfig = {};
-        if (process.env.NODE_ENV === "local") {
-          sslConfig = false;
-        }
+        const isLocal = configService.get<string>("NODE_ENV") === "local";
+
         const dbOptions: DataSourceOptions = {
           type: "postgres",
           url: configService.get<string>("DB_URL"),
           synchronize: false,
-          ssl: sslConfig,
-          logging: configService.get("DB_LOGGING"),
-          entities: [DB_ENTITIES],
-          migrations: [DB_MIGRATIONS],
+          logging: configService.get<string>("DB_LOGGING") === "true",
+          ssl: isLocal
+            ? false
+            : {
+                rejectUnauthorized: false,
+              },
+          entities: [
+            configService.get<string>("DB_ENTITIES") || "dist/**/*.entity.js",
+          ],
+          migrations: [
+            configService.get<string>("DB_MIGRATIONS") ||
+              "dist/migrations/*.js",
+          ],
         };
-        console.log("dbOptions ", dbOptions);
+
         return dbOptions;
       },
-      inject: [ConfigService],
     }),
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+
     UsersModule,
     AuthModule,
     OrganizationModule,
