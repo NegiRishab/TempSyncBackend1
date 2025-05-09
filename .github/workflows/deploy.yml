@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Production
     env:
-      DB_URL: ${{ secrets.DATABASE_URL }} 
+      DB_URL: ${{ secrets.DB_URL }} 
 
     steps:
       - name: Checkout code
