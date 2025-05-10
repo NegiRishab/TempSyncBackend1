@@ -154,6 +154,8 @@ export class AuthController {
       await this.userTokensService.createToken(user.id, tokens.refreshToken);
       res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
+        secure: true,
+        sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -198,6 +200,8 @@ export class AuthController {
 
       res.clearCookie("refreshToken", {
         httpOnly: true,
+        secure: true,
+        sameSite: "none",
       });
 
       return { message: "User logout succesfully" };
