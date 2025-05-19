@@ -186,6 +186,18 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(AccessTokenGuard)
+  @Get("check")
+  verify() {
+    try {
+      return { message: "User is authenticated succesfully" };
+    } catch (error) {
+      console.error("[AuthController]:[logout]:", error);
+      throw error;
+    }
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AccessTokenGuard)
   @Get("logout")
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     try {
