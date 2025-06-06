@@ -40,7 +40,7 @@ export class UsersController {
   @UseGuards(AccessTokenGuard)
   async profile(@Req() req) {
     try {
-      const id = req.user.sub;
+      const id: string = req.user.id;
       const profile = await this.usersService.findOne({
         where: { id },
       });
@@ -61,7 +61,7 @@ export class UsersController {
   @UseGuards(AccessTokenGuard)
   async update(@Req() req, @Body() updateUser: UpdateUserDto) {
     try {
-      const id = req.user.sub;
+      const id: string = req.user.id;
       const user = await this.usersService.findOne({
         where: { id },
       });

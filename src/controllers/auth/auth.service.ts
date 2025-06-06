@@ -24,7 +24,7 @@ export class AuthService {
   private async generateAccessToken(user: JwtPayload) {
     return this.jwtService.signAsync(
       {
-        sub: user.id,
+        id: user.id,
         email: user.email,
         organizationId: user.organizationId,
       },
@@ -43,13 +43,13 @@ export class AuthService {
   private async generateRefreshToken(user: JwtPayload) {
     return this.jwtService.signAsync(
       {
-        sub: user.id,
+        id: user.id,
         email: user.email,
         organizationId: user.organizationId,
       },
       {
         secret: this.configService.get<string>("JWT_SECRET"),
-        expiresIn: `${this.configService.get<number>("JWT_REFRESH_EXPIRES_IN_HOURS")}h`,
+        expiresIn: `${this.configService.get<number>("JWT_REFRESH_EXPIRES_IN_DAYS")}d`,
       },
     );
   }
@@ -86,7 +86,10 @@ export class AuthService {
         );
       }
 
-      const user = await this.userService.findOne({ where: { id: userId } });
+      const user = await this.userService.findOne({
+        where: { id: userId },
+        relations: ["organization"],
+      });
 
       if (!user) {
         throw new HttpException(
