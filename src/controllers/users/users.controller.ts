@@ -9,19 +9,13 @@ import {
   Put,
   Logger,
 } from "@nestjs/common";
-// import * as _ from "lodash";
 import { UsersService } from "./users.service";
 import { UpdateUserDto } from "./dto/user.dto";
 import { ERRORS } from "src/common/constants";
 import { AccessTokenGuard } from "../auth/guards/accessToken.guard";
 import { UtilitiesServices } from "src/common/services/utils.services";
-// import { LogEventEnum } from "src/common/enums/log.enum";
 import { ConfigService } from "@nestjs/config";
-// import { EMAIL_TEMPLATES } from "src/common/constants/emails";
-// import { FindManyOptions } from "typeorm";
-// import { UserEntity } from "./entities/user.entity";
-// import { FileInterceptor } from "@nestjs/platform-express";
-// import * as moment from "moment";
+import { RedisService } from "src/redis/redis.service";
 
 @Controller("users")
 export class UsersController {
@@ -30,6 +24,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly utilService: UtilitiesServices,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
   /**
    * get user profile
@@ -40,10 +35,29 @@ export class UsersController {
   @UseGuards(AccessTokenGuard)
   async profile(@Req() req) {
     try {
-      const id: string = req.user.id;
+      const userId: string = req.user.id;
+
+      const cached = await this.redisService.get(`user:${userId}`);
+      console.log('hello caheed')
+      if (cached) return cached;
+
       const profile = await this.usersService.findOne({
-        where: { id },
+        where: { id: userId },
+        relations: ["organization"],
       });
+
+      if (!profile) {
+        throw new HttpException(
+          ERRORS.USER.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      await this.redisService.set(
+        `user:${userId}`,
+        JSON.stringify(profile),
+        3600,
+      );
+      console.info('hello pdrofile')
 
       return profile;
     } catch (error) {

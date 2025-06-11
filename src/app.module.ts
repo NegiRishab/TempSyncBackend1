@@ -7,6 +7,7 @@ import { UsersModule } from "./controllers/users/users.module";
 import { AuthModule } from "./controllers/auth/auth.module";
 import { OrganizationModule } from "./controllers/organization/organization.module";
 import { DataSourceOptions } from "typeorm";
+import { RedisModule } from "./redis/redis.module";
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { DataSourceOptions } from "typeorm";
     UsersModule,
     AuthModule,
     OrganizationModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
