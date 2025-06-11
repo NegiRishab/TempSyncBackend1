@@ -31,6 +31,7 @@ export class UsersController {
    * @param id
    * @returns
    */
+  
   @Get()
   @UseGuards(AccessTokenGuard)
   async profile(@Req() req) {
