@@ -38,7 +38,6 @@ export class UsersController {
       const userId: string = req.user.id;
 
       const cached = await this.redisService.get(`user:${userId}`);
-      console.log('hello caheed')
       if (cached) return cached;
 
       const profile = await this.usersService.findOne({
@@ -57,7 +56,6 @@ export class UsersController {
         JSON.stringify(profile),
         3600,
       );
-      console.info('hello pdrofile')
 
       return profile;
     } catch (error) {
@@ -89,7 +87,25 @@ export class UsersController {
       const updateOption = {
         ...updateUser,
       };
-      return await this.usersService.findOneAndUpdate(id, updateOption);
+      //if password is updating then store password as encrypted
+      if (updateUser?.password) {
+        updateOption.password = this.utilService.encodePassword(
+          updateUser.password,
+        );
+      }
+      await this.usersService.findOneAndUpdate(id, updateOption);
+      const profile = await this.usersService.findOne({
+        where: { id },
+        relations: ["organization"],
+      });
+      if (profile) {
+        await this.redisService.set(
+          `user:${id}`,
+          JSON.stringify(profile),
+          3600,
+        );
+      }
+      return { message: "User updated succesfully" };
     } catch (error) {
       this.logger.error("[UsersController]:[update]:", error);
 

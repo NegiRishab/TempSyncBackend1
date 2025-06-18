@@ -43,16 +43,13 @@ export class InviteAcceptUserDto {
 
 export class UpdateUserDto {
   @IsOptional({ message: ERRORS.USER.FIRST_NAME_IS_INVALID })
-  firstName: string;
+  first_name: string;
 
   @IsOptional({ message: ERRORS.USER.LAST_NAME_IS_INVALID })
-  lastName: string;
+  last_name: string;
 
-  @IsOptional({ message: ERRORS.USER.LANGUAGE_IS_INVALID })
-  language: string;
-
-  @IsOptional({ message: ERRORS.USER.USER_ROLE_IS_INVALID })
-  role: string;
+  @IsOptional({ message: ERRORS.USER.PASSWORD_IS_REQUIRED })
+  password: string;
 }
 
 export class UpdateUserPasswordDto {
