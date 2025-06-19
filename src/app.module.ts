@@ -8,6 +8,7 @@ import { AuthModule } from "./controllers/auth/auth.module";
 import { OrganizationModule } from "./controllers/organization/organization.module";
 import { DataSourceOptions } from "typeorm";
 import { RedisModule } from "./redis/redis.module";
+import { InvitationsModule } from './invitations/invitations.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { RedisModule } from "./redis/redis.module";
     AuthModule,
     OrganizationModule,
     RedisModule,
+    InvitationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
