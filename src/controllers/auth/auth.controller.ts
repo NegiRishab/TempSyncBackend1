@@ -12,7 +12,7 @@ import {
   Get,
 } from "@nestjs/common";
 import { UsersService } from "../../controllers/users/users.service";
-import { SigInDto, SignUpDto } from "./dto/auth.dto";
+import { SigInDto, SignUpDto, SignUpFromInviteDto } from "./dto/auth.dto";
 import { ERRORS } from "src/common/constants";
 import { UtilitiesServices } from "src/common/services/utils.services";
 // import { FindOneOptions } from "typeorm";
@@ -28,6 +28,7 @@ import { UserEntity } from "../users/entities/user.entity";
 import { RefreshTokenGuard } from "./guards/refreshToken.guard";
 import { Request, Response } from "express";
 import { AccessTokenGuard } from "./guards/accessToken.guard";
+import { InvitationsService } from "src/invitations/invitations.service";
 @Controller("auth")
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -38,6 +39,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
     private readonly organizationService: OrganizationService,
+    private readonly invitationsService: InvitationsService,
   ) {}
 
   /**
@@ -172,6 +174,51 @@ export class AuthController {
       };
     } catch (error) {
       console.error("[AuthController]:[signIn]:", error);
+      throw error;
+    }
+  }
+
+  // src/auth/auth.controller.ts
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post("sign-up-from-invite")
+  async signUpFromInvite(@Body() dto: SignUpFromInviteDto) {
+    try {
+      const invitation = await this.invitationsService.validateToken(dto.token);
+      if (!invitation) {
+        throw new HttpException(
+          ERRORS.USER.INVALID_OR_EXPIRED_INVITATION,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const existingUser = await this.usersService.findOne({
+        where: { email: invitation.email.toLowerCase() },
+      });
+
+      if (existingUser) {
+        throw new HttpException(
+          ERRORS.USER.USER_WITH_SAME_EMAIL_EXISTS,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const createUserPayload = {
+        first_name: dto.firstName,
+        last_name: dto.lastName,
+        email: invitation.email.toLowerCase(),
+        password: this.utilService.encodePassword(dto.password),
+        role: UserRoleEnum.member,
+        organization: invitation.organization,
+      };
+
+      await this.usersService.create(createUserPayload);
+
+      await this.invitationsService.markAsUsed(dto.token);
+
+      return { message: "User created successfully from invitation" };
+    } catch (error) {
+      this.logger.error("Sign up from invitation error", error);
       throw error;
     }
   }

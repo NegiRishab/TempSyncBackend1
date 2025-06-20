@@ -82,7 +82,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     try {
       const stringValue = JSON.stringify(value);
       if (ttlSeconds) {
-        await this.client.setex(key, ttlSeconds, stringValue);
+        await this.client.set(key, stringValue, "EX", ttlSeconds);
       } else {
         await this.client.set(key, stringValue);
       }

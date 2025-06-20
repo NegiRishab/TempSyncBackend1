@@ -132,5 +132,6 @@ export enum InvitationTypeEnum {
 export enum UserRoleEnum {
   owner = "OWNER",
   admin = "ADMIN",
-  member = "MEMBER",
+  member = "USER",
+  manager = "MANAGER",
 }

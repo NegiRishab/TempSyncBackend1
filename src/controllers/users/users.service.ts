@@ -66,28 +66,3 @@ export class UsersService {
     }
   }
 }
-
-// const usersToUpdate = [
-//   { id: 1, name: 'Alice', email: 'alice@example.com' },
-//   { id: 2, name: 'Bob', email: 'bob@example.com' },
-//   { id: 3, name: 'Charlie', email: 'charlie@example.com' }
-// ];
-
-// const ids = usersToUpdate.map(user => user.id).join(", ");
-
-// const nameCases = usersToUpdate
-//   .map(user => `WHEN id = ${user.id} THEN '${user.name}'`)
-//   .join(" ");
-// const emailCases = usersToUpdate
-//   .map(user => `WHEN id = ${user.id} THEN '${user.email}'`)
-//   .join(" ");
-
-// const query = `
-//   UPDATE users
-//   SET
-//     name = CASE ${nameCases} END,
-//     email = CASE ${emailCases} END
-//   WHERE id IN (${ids});
-// `;
-
-// await this.userRepository.query(query);

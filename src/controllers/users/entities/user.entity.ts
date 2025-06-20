@@ -25,4 +25,7 @@ export class UserEntity extends Base {
 
   @Column({ type: "boolean", nullable: false, default: true })
   is_active: boolean;
+
+  @Column({ type: "varchar", nullable: true })
+  profile_image_url: string;
 }

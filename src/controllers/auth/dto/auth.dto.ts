@@ -52,3 +52,27 @@ export class SigInDto {
   @IsNotEmpty({ message: ERRORS.USER.PASSWORD_IS_REQUIRED })
   password: string;
 }
+
+export class SignUpFromInviteDto {
+  @IsString()
+  token: string;
+
+  @IsString()
+  firstName: string;
+
+  @IsString()
+  lastName: string;
+
+  @IsNotEmpty({ message: ERRORS.USER.PASSWORD_IS_REQUIRED })
+  @IsStrongPassword(
+    {
+      minLength: 8,
+      minLowercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+      minUppercase: 1,
+    },
+    { message: ERRORS.AUTH.PASSWORD_IS_NOT_STRONG },
+  )
+  password: string;
+}
