@@ -208,7 +208,7 @@ export class AuthController {
         last_name: dto.lastName,
         email: invitation.email.toLowerCase(),
         password: this.utilService.encodePassword(dto.password),
-        role: "User",
+        role: UserRoleEnum.member,
         organization: invitation.organization,
       };
 
