@@ -33,7 +33,8 @@ export class InvitationsService {
 
     await this.invitationRepo.save(invitation);
 
-    const invitationUrl = `http://localhost:5173/invite/accept?token=${token}`;
+    // const invitationUrl = `http://localhost:5173/invite/accept?token=${token}`;
+    const invitationUrl = `https://dev-sync-frontend-ivory.vercel.app/invite/accept?token=${token}`;
     await this.mailerService.sendInvitationEmail(
       email,
       organization.name,
