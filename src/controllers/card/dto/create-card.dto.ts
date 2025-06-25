@@ -3,12 +3,10 @@ import { CardStatus } from "src/common/enums";
 
 export class CreateCardDto {
   @IsString()
-  @Length(1, 100)
   title: string;
 
   @IsOptional()
   @IsString()
-  @Length(0, 500)
   description?: string;
 
   @IsUUID()

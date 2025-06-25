@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Post,
@@ -20,7 +19,7 @@ import { AccessTokenGuard } from "../auth/guards/accessToken.guard";
 export class WorkplaceController {
   constructor(private readonly service: WorkplaceService) {}
 
-  @Post()
+  @Post("/create")
   async create(@Req() req, @Body() dto: CreateWorkplaceDto) {
     const organizationId: string = req.user.organizationId;
     const workplaceName: string = dto.name;
@@ -29,10 +28,15 @@ export class WorkplaceController {
     return this.service.createWorkplace(workplaceName, organizationId, userId);
   }
 
-  @Get()
+  @Get("my")
   async myWorkplaces(@Req() req) {
     const userId: string = req.user.id;
     return this.service.getMyWorkplacesByUserId(userId);
+  }
+
+  @Get("users/:workPlaceId")
+  async workPlaceUsers(@Param("workPlaceId") workPlaceId: string) {
+    return this.service.getWorkPlaceUsers(workPlaceId);
   }
 
   @Post("/add/user/:id")
@@ -40,14 +44,16 @@ export class WorkplaceController {
     @Param("id") workplaceId: string,
     @Body() dto: AddUserToWorkplaceDto,
   ) {
-    return this.service.addUser(workplaceId, dto.userId);
+    await this.service.addUser(workplaceId, dto.userId);
+    return { message: "User Added Succesfully" };
   }
 
-  @Delete("/remove/user/:id")
+  @Post("/remove/user/:id")
   async removeUSer(
     @Param("id") workplaceId: string,
     @Body() dto: AddUserToWorkplaceDto,
   ) {
-    return this.service.addUser(workplaceId, dto.userId);
+    await this.service.removeUserFromWorkplace(workplaceId, dto.userId);
+    return { message: "User Remove Succesfully" };
   }
 }

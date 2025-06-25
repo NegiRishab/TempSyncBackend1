@@ -78,11 +78,11 @@ export class CardService {
 
       if (!card) throw new NotFoundException("Card not found");
 
-      card.description = cardUpdate.description
+      card.description = cardUpdate?.description
         ? cardUpdate.description
         : card.description;
-      card.title = cardUpdate.title ? cardUpdate.title : card.title;
-      card.status = cardUpdate.status ? cardUpdate.status : card.status;
+      card.title = cardUpdate?.title ? cardUpdate.title : card.title;
+      card.status = cardUpdate?.status ? cardUpdate.status : card.status;
 
       return await this.cardRepo.save(card);
     } catch (error) {

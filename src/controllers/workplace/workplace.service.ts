@@ -90,7 +90,8 @@ export class WorkplaceService {
         workplace: wp,
         user: user,
       });
-      return this.wpUserRepo.save(wpUser);
+      await this.wpUserRepo.save(wpUser);
+      return;
     } catch (error) {
       console.error("[workPlaceService]:[addUser]:", error);
       throw error;
@@ -111,7 +112,7 @@ export class WorkplaceService {
       }
 
       await this.wpUserRepo.remove(wpUser);
-      return { message: "User removed from workplace." };
+      return;
     } catch (error) {
       console.error("[workPlaceService]:[removeUserFromWorkplace]:", error);
       throw error;
@@ -128,6 +129,26 @@ export class WorkplaceService {
       return wpUsers.map((wpUser) => wpUser.workplace);
     } catch (error) {
       console.error("[workPlaceService]:[getMyWorkplacesByUserId]:", error);
+      throw error;
+    }
+  }
+
+  async getWorkPlaceUsers(workplaceId: string) {
+    try {
+      const wpUsers = await this.wpUserRepo.find({
+        where: { workplace: { id: workplaceId } },
+        relations: ["user"],
+      });
+
+      return wpUsers.map((wpUser) => ({
+        id: wpUser.user.id,
+        name: `${wpUser.user.first_name} ${wpUser.user.last_name}`,
+        email: wpUser.user.email,
+        isOwner: wpUser.isOwner,
+        joinedAt: wpUser.joinedAt,
+      }));
+    } catch (error) {
+      console.error("[WorkplaceService]:[getWorkPlaceUsers]:", error);
       throw error;
     }
   }
