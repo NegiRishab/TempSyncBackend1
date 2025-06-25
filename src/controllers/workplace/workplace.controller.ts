@@ -8,15 +8,15 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { AuthGuard } from "@nestjs/passport";
 import { WorkplaceService } from "./workplace.service";
 import {
   AddUserToWorkplaceDto,
   CreateWorkplaceDto,
 } from "./dto/create-workplace.dto";
+import { AccessTokenGuard } from "../auth/guards/accessToken.guard";
 
 @Controller("workplace")
-@UseGuards(AuthGuard)
+@UseGuards(AccessTokenGuard)
 export class WorkplaceController {
   constructor(private readonly service: WorkplaceService) {}
 

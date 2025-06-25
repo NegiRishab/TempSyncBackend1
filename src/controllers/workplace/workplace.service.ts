@@ -8,7 +8,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Workplace } from "./entities/workplace.entity";
 import { Repository } from "typeorm";
 import { Organization } from "../organization/entities/organization.entity";
-import { WorkplaceUser } from "../workplace-user/entities/workplace-user.entity";
+import { WorkplaceUser } from "./entities/workplace-user.entity";
 import { UserEntity } from "../users/entities/user.entity";
 import { ERRORS } from "src/common/constants";
 

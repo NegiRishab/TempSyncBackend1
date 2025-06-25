@@ -1,6 +1,6 @@
 import { Card } from "src/controllers/card/entities/card.entity";
 import { Organization } from "src/controllers/organization/entities/organization.entity";
-import { WorkplaceUser } from "src/controllers/workplace-user/entities/workplace-user.entity";
+import { WorkplaceUser } from "src/controllers/workplace/entities/workplace-user.entity";
 import {
   Entity,
   PrimaryGeneratedColumn,

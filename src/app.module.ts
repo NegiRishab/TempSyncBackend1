@@ -8,10 +8,9 @@ import { AuthModule } from "./controllers/auth/auth.module";
 import { OrganizationModule } from "./controllers/organization/organization.module";
 import { DataSourceOptions } from "typeorm";
 import { RedisModule } from "./redis/redis.module";
-import { InvitationsModule } from './invitations/invitations.module';
-import { WorkplaceModule } from './controllers/workplace/workplace.module';
-import { WorkplaceUserModule } from './controllers/workplace-user/workplace-user.module';
-import { CardModule } from './controllers/card/card.module';
+import { InvitationsModule } from "./invitations/invitations.module";
+import { WorkplaceModule } from "./controllers/workplace/workplace.module";
+import { CardModule } from "./controllers/card/card.module";
 
 @Module({
   imports: [
@@ -54,7 +53,6 @@ import { CardModule } from './controllers/card/card.module';
     RedisModule,
     InvitationsModule,
     WorkplaceModule,
-    WorkplaceUserModule,
     CardModule,
   ],
   controllers: [AppController],

@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { Base } from "../../../common/entities/base.entity";
 import { Organization } from "../../organization/entities/organization.entity";
-import { WorkplaceUser } from "src/controllers/workplace-user/entities/workplace-user.entity";
+import { WorkplaceUser } from "src/controllers/workplace/entities/workplace-user.entity";
 import { Card } from "src/controllers/card/entities/card.entity";
 
 @Entity("users")

@@ -7,6 +7,7 @@ import {
   Delete,
   Req,
   Put,
+  UseGuards,
 } from "@nestjs/common";
 import { CardService } from "./card.service";
 import {
@@ -14,8 +15,10 @@ import {
   CreateCardDto,
   UpdateCardDto,
 } from "./dto/create-card.dto";
+import { AccessTokenGuard } from "../auth/guards/accessToken.guard";
 
 @Controller("card")
+@UseGuards(AccessTokenGuard)
 export class CardController {
   constructor(private readonly cardService: CardService) {}
 
@@ -39,7 +42,7 @@ export class CardController {
   }
 
   @Delete("/delete/:cardId")
-  deleteCard(@Param("cardID") cardId: string) {
+  deleteCard(@Param("cardId") cardId: string) {
     return this.cardService.deleteCard(cardId);
   }
 }
