@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Req,
@@ -81,5 +83,17 @@ export class WorkplaceController {
     await this.redisService.invalidateWorkplaceUsersCache(workplaceId);
 
     return { message: "User Remove Succesfully" };
+  }
+
+  @Delete("/delete/:workplaceId")
+  async deleteWorkplace(@Param("workplaceId") workplaceId: string) {
+    const workplace = await this.service.getWorkPlace(workplaceId);
+
+    if (!workplace) throw new NotFoundException("Card not found");
+
+    await this.service.deleteWorkplace(workplace);
+    await this.redisService.invalidateWorkplaceUsersCache(workplace.id);
+
+    return { message: "Workplace removed successfully" };
   }
 }

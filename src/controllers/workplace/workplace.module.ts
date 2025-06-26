@@ -8,6 +8,7 @@ import { UserEntity } from "../users/entities/user.entity";
 import { WorkplaceUser } from "./entities/workplace-user.entity";
 import { RedisModule } from "src/redis/redis.module";
 import { RedisService } from "src/redis/redis.service";
+import { Card } from "../card/entities/card.entity";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RedisService } from "src/redis/redis.service";
       Organization,
       WorkplaceUser,
       UserEntity,
+      Card,
     ]),
     RedisModule,
   ],

@@ -11,6 +11,7 @@ import { Organization } from "../organization/entities/organization.entity";
 import { WorkplaceUser } from "./entities/workplace-user.entity";
 import { UserEntity } from "../users/entities/user.entity";
 import { ERRORS } from "src/common/constants";
+import { Card } from "../card/entities/card.entity";
 
 @Injectable()
 export class WorkplaceService {
@@ -26,6 +27,9 @@ export class WorkplaceService {
 
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
+
+    @InjectRepository(Card)
+    private cardRepo: Repository<Card>,
   ) {}
 
   async createWorkplace(wplaceName: string, orgId: string, userId: string) {
@@ -155,6 +159,33 @@ export class WorkplaceService {
       }));
     } catch (error) {
       console.error("[WorkplaceService]:[getWorkPlaceUsers]:", error);
+      throw error;
+    }
+  }
+
+  async getWorkPlace(workplaceId: string) {
+    try {
+      const wp = await this.workplaceRepo.findOne({
+        where: { id: workplaceId },
+      });
+
+      return wp;
+    } catch (error) {
+      console.error("[WorkplaceService]:[getWorkPlaceUsers]:", error);
+      throw error;
+    }
+  }
+
+  async deleteWorkplace(workplace: Workplace) {
+    try {
+      await this.cardRepo.delete({ workplace: { id: workplace.id } });
+
+      await this.wpUserRepo.delete({ workplace: { id: workplace.id } });
+
+      await this.workplaceRepo.remove(workplace);
+      return;
+    } catch (error) {
+      console.error("[WorkplaceService]:[deleteWorkplace]:", error);
       throw error;
     }
   }
