@@ -123,7 +123,13 @@ export class WorkplaceService {
     try {
       const wpUsers = await this.wpUserRepo.find({
         where: { user: { id: userId } },
-        relations: ["workplace", "workplace.cards"],
+        relations: [
+          "workplace",
+          "workplace.cards",
+          "workplace.cards.assignee",
+          "workplace.members",
+          "workplace.members.user",
+        ],
       });
 
       return wpUsers.map((wpUser) => wpUser.workplace);

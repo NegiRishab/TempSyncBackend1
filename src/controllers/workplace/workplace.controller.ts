@@ -13,11 +13,15 @@ import {
   CreateWorkplaceDto,
 } from "./dto/create-workplace.dto";
 import { AccessTokenGuard } from "../auth/guards/accessToken.guard";
+import { RedisService } from "src/redis/redis.service";
 
 @Controller("workplace")
 @UseGuards(AccessTokenGuard)
 export class WorkplaceController {
-  constructor(private readonly service: WorkplaceService) {}
+  constructor(
+    private readonly service: WorkplaceService,
+    private readonly redisService: RedisService,
+  ) {}
 
   @Post("/create")
   async create(@Req() req, @Body() dto: CreateWorkplaceDto) {
@@ -31,7 +35,19 @@ export class WorkplaceController {
   @Get("my")
   async myWorkplaces(@Req() req) {
     const userId: string = req.user.id;
-    return this.service.getMyWorkplacesByUserId(userId);
+
+    const cached = await this.redisService.get(`workplaceUser:${userId}`);
+    if (cached) return cached;
+
+    const workPlaceDetails = await this.service.getMyWorkplacesByUserId(userId);
+
+    await this.redisService.set(
+      `workplaceUser:${userId}`,
+      JSON.stringify(workPlaceDetails),
+      3600,
+    );
+
+    return workPlaceDetails;
   }
 
   @Get("users/:workPlaceId")
@@ -45,6 +61,8 @@ export class WorkplaceController {
     @Body() dto: AddUserToWorkplaceDto,
   ) {
     await this.service.addUser(workplaceId, dto.userId);
+    await this.redisService.invalidateWorkplaceUsersCache(workplaceId);
+
     return { message: "User Added Succesfully" };
   }
 
@@ -54,6 +72,8 @@ export class WorkplaceController {
     @Body() dto: AddUserToWorkplaceDto,
   ) {
     await this.service.removeUserFromWorkplace(workplaceId, dto.userId);
+    await this.redisService.invalidateWorkplaceUsersCache(workplaceId);
+
     return { message: "User Remove Succesfully" };
   }
 }

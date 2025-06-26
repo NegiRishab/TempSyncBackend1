@@ -132,4 +132,19 @@ export class CardService {
       throw error;
     }
   }
+
+  async getCard(cardId: string) {
+    try {
+      const card = await this.cardRepo.findOne({
+        where: { id: cardId },
+        relations: ["workplace"],
+      });
+      if (!card) throw new NotFoundException("Card not found");
+
+      return card;
+    } catch (error) {
+      console.error("[cardService]:[deleteCard]:", error);
+      throw error;
+    }
+  }
 }

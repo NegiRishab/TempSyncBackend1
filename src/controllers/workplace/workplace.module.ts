@@ -6,6 +6,8 @@ import { Workplace } from "./entities/workplace.entity";
 import { Organization } from "../organization/entities/organization.entity";
 import { UserEntity } from "../users/entities/user.entity";
 import { WorkplaceUser } from "./entities/workplace-user.entity";
+import { RedisModule } from "src/redis/redis.module";
+import { RedisService } from "src/redis/redis.service";
 
 @Module({
   imports: [
@@ -15,8 +17,9 @@ import { WorkplaceUser } from "./entities/workplace-user.entity";
       WorkplaceUser,
       UserEntity,
     ]),
+    RedisModule,
   ],
   controllers: [WorkplaceController],
-  providers: [WorkplaceService],
+  providers: [WorkplaceService, RedisService],
 })
 export class WorkplaceModule {}

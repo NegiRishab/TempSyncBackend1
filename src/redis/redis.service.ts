@@ -6,13 +6,21 @@ import {
 } from "@nestjs/common";
 import Redis from "ioredis";
 import { ConfigService } from "@nestjs/config";
+import { WorkplaceUser } from "src/controllers/workplace/entities/workplace-user.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   public client: Redis;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+
+    @InjectRepository(WorkplaceUser)
+    private readonly wpUserRepo: Repository<WorkplaceUser>,
+  ) {
     this.initializeRedis();
   }
 
@@ -71,6 +79,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async get<T>(key: string): Promise<T | null> {
     try {
       const value = await this.client.get(key);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return value ? JSON.parse(value) : null;
     } catch (error) {
       this.logger.error(`Error getting key ${key}:`, error);
@@ -148,6 +157,32 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       return 0;
     } catch (error) {
       this.logger.error(`Error invalidating pattern ${pattern}:`, error);
+      return 0;
+    }
+  }
+
+  async invalidateWorkplaceUsersCache(workplaceId: string): Promise<number> {
+    try {
+      const wpUsers = await this.wpUserRepo.find({
+        where: { workplace: { id: workplaceId } },
+        relations: ["user"],
+      });
+
+      let deletedCount = 0;
+      for (const wpUser of wpUsers) {
+        const deleted = await this.del(`workplaceUser:${wpUser.user.id}`);
+        if (deleted) deletedCount++;
+      }
+
+      this.logger.log(
+        `Invalidated cache for ${deletedCount} users in workplace ${workplaceId}`,
+      );
+      return deletedCount;
+    } catch (error) {
+      this.logger.error(
+        `Error invalidating cache for workplace ${workplaceId}:`,
+        error,
+      );
       return 0;
     }
   }
