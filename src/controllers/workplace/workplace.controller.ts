@@ -29,7 +29,13 @@ export class WorkplaceController {
     const workplaceName: string = dto.name;
     const userId: string = req.user.id;
 
-    return this.service.createWorkplace(workplaceName, organizationId, userId);
+    const workplace = await this.service.createWorkplace(
+      workplaceName,
+      organizationId,
+      userId,
+    );
+    await this.redisService.invalidateWorkplaceUsersCache(workplace.id);
+    return { message: "Workplace created succesfully" };
   }
 
   @Get("my")
