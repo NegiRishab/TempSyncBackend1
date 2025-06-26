@@ -1,19 +1,13 @@
 import { Module, Global } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigModule } from "@nestjs/config";
 import { RedisService } from "./redis.service";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { WorkplaceUser } from "src/controllers/workplace/entities/workplace-user.entity";
 
-@Global() // Makes RedisService available globally
+@Global()
 @Module({
-  imports: [ConfigModule],
-  providers: [
-    {
-      provide: RedisService,
-      useFactory: (configService: ConfigService) => {
-        return new RedisService(configService);
-      },
-      inject: [ConfigService],
-    },
-  ],
-  exports: [RedisService],
+  imports: [ConfigModule, TypeOrmModule.forFeature([WorkplaceUser])],
+  providers: [RedisService],
+  exports: [RedisService, TypeOrmModule],
 })
 export class RedisModule {}

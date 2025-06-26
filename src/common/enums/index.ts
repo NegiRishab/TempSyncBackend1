@@ -135,3 +135,9 @@ export enum UserRoleEnum {
   member = "USER",
   manager = "MANAGER",
 }
+
+export enum CardStatus {
+  PENDING = "PENDING",
+  ONGOING = "ONGOING",
+  COMPLETED = "COMPLETED",
+}
