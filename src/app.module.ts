@@ -11,6 +11,7 @@ import { RedisModule } from "./redis/redis.module";
 import { InvitationsModule } from "./invitations/invitations.module";
 import { WorkplaceModule } from "./controllers/workplace/workplace.module";
 import { CardModule } from "./controllers/card/card.module";
+import { NotificationsModule } from "./controllers/notifications/notifications.module";
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { CardModule } from "./controllers/card/card.module";
     InvitationsModule,
     WorkplaceModule,
     CardModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

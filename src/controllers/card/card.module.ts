@@ -9,6 +9,7 @@ import { UserEntity } from "../users/entities/user.entity";
 import { Organization } from "../organization/entities/organization.entity";
 import { RedisService } from "src/redis/redis.service";
 import { RedisModule } from "src/redis/redis.module";
+import { NotificationsModule } from "../notifications/notifications.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RedisModule } from "src/redis/redis.module";
       UserEntity,
     ]),
     RedisModule,
+    NotificationsModule,
   ],
   controllers: [CardController],
   providers: [CardService, RedisService],

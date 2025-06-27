@@ -91,8 +91,8 @@ export class WorkplaceController {
 
     if (!workplace) throw new NotFoundException("Card not found");
 
-    await this.service.deleteWorkplace(workplace);
     await this.redisService.invalidateWorkplaceUsersCache(workplace.id);
+    await this.service.deleteWorkplace(workplace);
 
     return { message: "Workplace removed successfully" };
   }
