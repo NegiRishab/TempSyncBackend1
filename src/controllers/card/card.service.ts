@@ -147,4 +147,22 @@ export class CardService {
       throw error;
     }
   }
+
+  async getAllWorkplaceUsers(workplaceId: string) {
+    try {
+      const workplace = await this.workplaceRepo.findOne({
+        where: { id: workplaceId },
+        relations: ["members"],
+      });
+
+      if (!workplace) {
+        throw new Error(`Workplace with id ${workplaceId} not found`);
+      }
+
+      return workplace.members;
+    } catch (error) {
+      console.error("[cardService]:[getAllWorkplaceUsers]:", error);
+      throw error;
+    }
+  }
 }

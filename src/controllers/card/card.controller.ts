@@ -32,47 +32,80 @@ export class CardController {
   @Post("/create")
   async create(@Body() createCardDto: CreateCardDto, @Req() req) {
     const userId: string = req.user.id;
+
     const card = await this.cardService.createCard(userId, createCardDto);
+
     await this.redisService.invalidateWorkplaceUsersCache(
       createCardDto.workplaceId,
     );
 
-    await this.notificationsService.create({
-      userId, // Target user ID (e.g., card assignee or project member)
-      type: "card_create",
-      message: `Card "${card.title}" was created in ${card.workplace.name}.`,
-      metadata: {
-        cardId: card.id,
-        updatedBy: userId,
-      },
-    });
+    const workplaceUsers = await this.cardService.getAllWorkplaceUsers(
+      card.workplace.id,
+    );
+
+    // Filter out the user who created the card
+    const recipients = workplaceUsers.filter(
+      (member) => member.user.id !== userId,
+    );
+
+    await Promise.all(
+      recipients.map(async (member) => {
+        await this.notificationsService.create({
+          userId: member.user.id,
+          type: "card_create",
+          message: `Card "${card.title}" was created in ${card.workplace.name}.`,
+          metadata: {
+            cardId: card.id,
+            updatedBy: userId,
+          },
+        });
+      }),
+    );
+
     return { message: "Card Created successfully" };
   }
 
   @Put("/update-card")
   async updateCard(@Body() updateCardDto: UpdateCardDto, @Req() req) {
-    const userId: string = req.user.id;
-    const cardDetails = await this.cardService.getCard(updateCardDto.cardId);
+    try {
+      const userId: string = req.user.id;
+      const cardDetails = await this.cardService.getCard(updateCardDto.cardId);
 
-    if (!cardDetails) throw new NotFoundException("Card not found");
+      if (!cardDetails) throw new NotFoundException("Card not found");
 
-    const card = await this.cardService.updateCard(updateCardDto);
+      const card = await this.cardService.updateCard(updateCardDto);
 
-    await this.redisService.invalidateWorkplaceUsersCache(
-      cardDetails.workplace.id,
-    );
-    console.log({ card });
+      await this.redisService.invalidateWorkplaceUsersCache(
+        cardDetails.workplace.id,
+      );
 
-    await this.notificationsService.create({
-      userId, // Target user ID (e.g., card assignee or project member)
-      type: "card_update",
-      message: `Card "${card.title}" was updated in ${cardDetails.workplace.name}.`,
-      metadata: {
-        cardId: card.id,
-        updatedBy: userId,
-      },
-    });
-    return { message: "Card Updated successfully" };
+      const workplaceUsers = await this.cardService.getAllWorkplaceUsers(
+        cardDetails.workplace.id,
+      );
+
+      // Filter out the user who created the card
+      const recipients = workplaceUsers.filter(
+        (member) => member.user.id !== userId,
+      );
+      await Promise.all(
+        recipients.map(async (member) => {
+          await this.notificationsService.create({
+            userId: member.user.id,
+            type: "card_update",
+            message: `Card "${card.title}" was updated in ${cardDetails.workplace.name}.`,
+            metadata: {
+              cardId: card.id,
+              updatedBy: userId,
+            },
+          });
+        }),
+      );
+
+      return { message: "Card Updated successfully" };
+    } catch (error) {
+      console.error("[cardController]:[updateCard]:", error);
+      throw error;
+    }
   }
 
   @Patch("/assign-user")
@@ -99,15 +132,28 @@ export class CardController {
     await this.cardService.deleteCard(cardId);
     await this.redisService.invalidateWorkplaceUsersCache(card.workplace.id);
 
-    await this.notificationsService.create({
-      userId, // Target user ID (e.g., card assignee or project member)
-      type: "card_deleted",
-      message: `Card "${card.title}" was removed in ${card.workplace.name}.`,
-      metadata: {
-        cardId: card.id,
-        updatedBy: userId,
-      },
-    });
+    const workplaceUsers = await this.cardService.getAllWorkplaceUsers(
+      card.workplace.id,
+    );
+
+    // Filter out the user who created the card
+    const recipients = workplaceUsers.filter(
+      (member) => member.user.id !== userId,
+    );
+
+    await Promise.all(
+      recipients.map(async (member) => {
+        await this.notificationsService.create({
+          userId: member.user.id,
+          type: "card_deleted",
+          message: `Card "${card.title}" was removed in ${card.workplace.name}.`,
+          metadata: {
+            cardId: card.id,
+            updatedBy: userId,
+          },
+        });
+      }),
+    );
     return { message: "Card removed successfully" };
   }
 }
