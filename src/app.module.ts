@@ -12,7 +12,7 @@ import { InvitationsModule } from "./invitations/invitations.module";
 import { WorkplaceModule } from "./controllers/workplace/workplace.module";
 import { CardModule } from "./controllers/card/card.module";
 import { NotificationsModule } from "./controllers/notifications/notifications.module";
-
+import { CloudinaryModule } from "./controllers/cloudinary/cloudinary.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -56,6 +56,7 @@ import { NotificationsModule } from "./controllers/notifications/notifications.m
     WorkplaceModule,
     CardModule,
     NotificationsModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

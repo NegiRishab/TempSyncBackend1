@@ -8,6 +8,11 @@ import {
   Req,
   Put,
   Logger,
+  UseInterceptors,
+  UploadedFile,
+  Param,
+  Post,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { UpdateUserDto } from "./dto/user.dto";
@@ -16,22 +21,24 @@ import { AccessTokenGuard } from "../auth/guards/accessToken.guard";
 import { UtilitiesServices } from "src/common/services/utils.services";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
 
 @Controller("users")
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly utilService: UtilitiesServices,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
+
   /**
-   * get user profile
-   * @param id
-   * @returns
+   * Get user profile
    */
-  
   @Get()
   @UseGuards(AccessTokenGuard)
   async profile(@Req() req) {
@@ -65,10 +72,7 @@ export class UsersController {
     }
   }
   /**
-   * update user details
-   * @param req
-   * @param body
-   * @returns
+   * Update user details
    */
   @Put()
   @UseGuards(AccessTokenGuard)
@@ -85,20 +89,21 @@ export class UsersController {
         );
       }
 
-      const updateOption = {
-        ...updateUser,
-      };
-      //if password is updating then store password as encrypted
+      const updateOption = { ...updateUser };
+
       if (updateUser?.password) {
         updateOption.password = this.utilService.encodePassword(
           updateUser.password,
         );
       }
+
       await this.usersService.findOneAndUpdate(id, updateOption);
+
       const profile = await this.usersService.findOne({
         where: { id },
         relations: ["organization"],
       });
+
       if (profile) {
         await this.redisService.set(
           `user:${id}`,
@@ -106,11 +111,44 @@ export class UsersController {
           3600,
         );
       }
-      return { message: "User updated succesfully" };
+
+      return { message: "User updated successfully" };
     } catch (error) {
       this.logger.error("[UsersController]:[update]:", error);
-
       throw error;
+    }
+  }
+
+  /**
+   * Upload profile image
+   */
+  @Post(":id/upload-image")
+  @UseGuards(AccessTokenGuard)
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadProfileImage(
+    @Param("id", ParseUUIDPipe) userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    try {
+      const uploadResult = await this.cloudinaryService.uploadImage(
+        file.buffer,
+        `users/${userId}`,
+      );
+
+      await this.usersService.findOneAndUpdate(userId, {
+        profile_image_url: uploadResult.secure_url,
+      });
+
+      return {
+        message: "Profile image uploaded successfully",
+        url: uploadResult.secure_url,
+      };
+    } catch (error) {
+      this.logger.error("[UsersController]:[uploadProfileImage]:", error);
+      throw new HttpException(
+        "Image upload failed",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
