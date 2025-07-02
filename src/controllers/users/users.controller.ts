@@ -23,6 +23,7 @@ import { ConfigService } from "@nestjs/config";
 import { RedisService } from "src/redis/redis.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { Express } from "express";
 
 @Controller("users")
 export class UsersController {
