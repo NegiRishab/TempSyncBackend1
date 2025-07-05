@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindManyOptions, FindOneOptions, Repository } from "typeorm";
+import { FindManyOptions, FindOneOptions, In, Repository } from "typeorm";
 import { UserEntity } from "./entities/user.entity";
 
 @Injectable()
@@ -62,6 +62,18 @@ export class UsersService {
       return await this.userRepository.update(id, updateData);
     } catch (error) {
       console.error("[UsersService]:[findOneAndUpdate]:", error);
+      throw error;
+    }
+  }
+
+  async getMultipleUsers(ids: string[]) {
+    try {
+      return await this.userRepository.find({
+        where: { id: In(ids) },
+        select: ["id", "first_name", "last_name", "profile_image_url", "email"],
+      });
+    } catch (error) {
+      console.error("[UsersService]:[getMultipleUsers]:", error);
       throw error;
     }
   }

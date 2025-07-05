@@ -29,6 +29,7 @@ import { RefreshTokenGuard } from "./guards/refreshToken.guard";
 import { Request, Response } from "express";
 import { AccessTokenGuard } from "./guards/accessToken.guard";
 import { InvitationsService } from "src/invitations/invitations.service";
+import axios from "axios";
 @Controller("auth")
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -212,9 +213,18 @@ export class AuthController {
         organization: invitation.organization,
       };
 
-      await this.usersService.create(createUserPayload);
+      const User: UserEntity =
+        await this.usersService.create(createUserPayload);
 
       await this.invitationsService.markAsUsed(dto.token);
+
+      await axios.post(
+        `${this.configService.get("CHAT_SERVICE_URL")}/api/conversations/add-new-user-global`,
+        {
+          userId: User.id,
+          orgId: invitation.organization.id,
+        },
+      );
 
       return { message: "User created successfully from invitation" };
     } catch (error) {

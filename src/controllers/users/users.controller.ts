@@ -152,4 +152,10 @@ export class UsersController {
       );
     }
   }
+
+  @Post("getuser-details")
+  async getUsersDetails(@Body() getusers: { ids: string[] }) {
+    const users = await this.usersService.getMultipleUsers(getusers?.ids);
+    return users;
+  }
 }
