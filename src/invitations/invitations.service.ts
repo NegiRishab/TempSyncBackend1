@@ -1,6 +1,7 @@
 // src/invitations/invitations.service.ts
 
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Invitation } from "./entities/invitation.entity";
 import { Repository } from "typeorm";
@@ -14,6 +15,7 @@ export class InvitationsService {
     @InjectRepository(Invitation)
     private readonly invitationRepo: Repository<Invitation>,
     private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
   ) {}
 
   async createInvitation(
@@ -21,6 +23,24 @@ export class InvitationsService {
     organization: Organization,
   ): Promise<Invitation> {
     const token = uuidv4();
+    const frontendUrl =
+      this.configService.get<string>("PUBLIC_FRONTEND_URL")?.trim() ||
+      this.configService.get<string>("FRONTEND_URL")?.split(",")[0].trim();
+    if (!frontendUrl) {
+      throw new Error("PUBLIC_FRONTEND_URL must be configured for invitations");
+    }
+    const invitationUrl = new URL(frontendUrl);
+    if (
+      !["http:", "https:"].includes(invitationUrl.protocol) ||
+      invitationUrl.username ||
+      invitationUrl.password
+    ) {
+      throw new Error("PUBLIC_FRONTEND_URL must be an HTTP(S) frontend URL");
+    }
+    invitationUrl.pathname = `${invitationUrl.pathname.replace(/\/$/, "")}/invite/accept`;
+    invitationUrl.search = "";
+    invitationUrl.hash = "";
+    invitationUrl.searchParams.set("token", token);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h expiry
 
     const invitation = this.invitationRepo.create({
@@ -33,12 +53,10 @@ export class InvitationsService {
 
     await this.invitationRepo.save(invitation);
 
-    // const invitationUrl = `http://localhost:5173/invite/accept?token=${token}`;
-    const invitationUrl = `https://dev-sync-frontend-ivory.vercel.app/invite/accept?token=${token}`;
     await this.mailerService.sendInvitationEmail(
       email,
       organization.name,
-      invitationUrl,
+      invitationUrl.toString(),
     );
 
     return invitation;

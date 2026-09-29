@@ -157,8 +157,8 @@ export class AuthController {
       await this.userTokensService.createToken(user.id, tokens.refreshToken);
       res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: process.env.NODE_ENV !== "local",
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -218,13 +218,20 @@ export class AuthController {
 
       await this.invitationsService.markAsUsed(dto.token);
 
-      await axios.post(
-        `${this.configService.get("CHAT_SERVICE_URL")}/api/conversations/add-new-user-global`,
-        {
-          userId: User.id,
-          orgId: invitation.organization.id,
-        },
-      );
+      // The account already exists and the invitation is consumed. A chat outage
+      // must not report signup as failed and encourage an impossible retry.
+      try {
+        const chatUrl = this.configService.getOrThrow<string>("CHAT_SERVICE_URL");
+        await axios.post(
+          `${chatUrl.replace(/\/$/, "")}/api/conversations/add-new-user-global`,
+          { userId: User.id, orgId: invitation.organization.id },
+          { timeout: 10000 },
+        );
+      } catch {
+        this.logger.warn(
+          `Invitation signup completed for user ${User.id}, but global chat membership could not be added`,
+        );
+      }
 
       return { message: "User created successfully from invitation" };
     } catch (error) {
@@ -269,8 +276,8 @@ export class AuthController {
 
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: process.env.NODE_ENV !== "local",
+        sameSite: "lax",
       });
 
       return { message: "User logout succesfully" };

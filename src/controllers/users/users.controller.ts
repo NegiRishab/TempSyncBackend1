@@ -47,7 +47,8 @@ export class UsersController {
       const userId: string = req.user.id;
 
       const cached = await this.redisService.get(`user:${userId}`);
-      if (cached) return cached;
+      // Ignore legacy double-encoded cache entries and reload from the database.
+      if (cached && typeof cached === "object") return cached;
 
       const profile = await this.usersService.findOne({
         where: { id: userId },
@@ -62,7 +63,7 @@ export class UsersController {
       }
       await this.redisService.set(
         `user:${userId}`,
-        JSON.stringify(profile),
+        profile,
         3600,
       );
 
@@ -108,7 +109,7 @@ export class UsersController {
       if (profile) {
         await this.redisService.set(
           `user:${id}`,
-          JSON.stringify(profile),
+          profile,
           3600,
         );
       }
@@ -139,6 +140,8 @@ export class UsersController {
       await this.usersService.findOneAndUpdate(userId, {
         profile_image_url: uploadResult.secure_url,
       });
+
+      await this.redisService.invalidateUserCache(userId);
 
       return {
         message: "Profile image uploaded successfully",

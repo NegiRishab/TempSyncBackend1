@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+coverage
+.nyc_output
+.env
+.env.*
+*.md
+*.log
+.eslintcache
+test
