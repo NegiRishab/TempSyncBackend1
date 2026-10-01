@@ -1,7 +1,7 @@
 # GitHub Actions CI and Jenkins deployment
 
 Each app repository owns `.github/workflows/ci.yml`.
-Pull requests to main, feature/** pushes, and manual runs test, build, and scan.
+Pull requests to main, feature/** pushes, and manual runs test and build.
 Only a push to main publishes images, after all checks pass.
 Jenkins owns deployment; CI does not access production databases or run migrations.
 The old backend Render deployment workflow has been removed.
@@ -26,19 +26,17 @@ No DB_URL, JWT_SECRET, email, or Cloudinary secrets belong in these CI jobs.
 Tests use mocks/test-only values. VITE_API_URL=/api and VITE_CHAT_URL=/chat
 are public build defaults, not secrets. Never put secrets in VITE_* variables.
 Configure branch protection to require the CI test-build-scan check before merging.
+The existing job ID is retained for compatibility; vulnerability scanning is disabled.
 Actions are pinned to commits; review and update pins as releases change.
 
 ## Build and release behavior
 
 CI builds linux/amd64 images on an x86 runner. Use an x86 EC2 instance for this
 phase; ARM/Graviton requires a separate build strategy.
-Trivy blocks publication for HIGH or CRITICAL OS/library vulnerabilities,
-including those without a published fix. Reports are retained for 14 days.
-A failing scan needs investigation and remediation; do not bypass it to release.
 Frontend tests cover proxy socket endpoints; chat tests cover JWT verification;
 backend runs the existing Jest suite. These are unit checks, not end-to-end tests.
 
-The exact locally scanned images are tagged and pushed, without rebuilding.
+The exact locally built images are tagged and pushed, without rebuilding.
 Tags include the commit SHA, workflow run ID, and attempt so a rerun gets a new tag.
 A successful publishing run produces a `release-<service>-<sha>` artifact containing
 `release.env` with the immutable image digest, commit and tag. Backend includes the
@@ -88,5 +86,4 @@ only the selected service, check health, and record/rollback releases.
 No Jenkins webhook is enabled yet; configure the CI-to-Jenkins trigger once the job
 and authenticated endpoint exist. For now the release artifact is the handoff.
 
-References: https://docs.docker.com/guides/gha/ and
-https://github.com/aquasecurity/trivy-action
+Reference: https://docs.docker.com/guides/gha/

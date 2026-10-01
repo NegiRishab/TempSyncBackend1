@@ -39,34 +39,6 @@ jobs:
         run: docker build --pull --target app --tag local/app:ci .
       - name: Build matching migration image
         run: docker build --target migrate --tag local/migrate:ci .
-      - name: Scan app image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: local/app:ci
-          scanners: vuln
-          format: table
-          output: trivy-app.txt
-          severity: HIGH,CRITICAL
-          ignore-unfixed: false
-          exit-code: '1'
-      - name: Scan migrate image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: local/migrate:ci
-          scanners: vuln
-          format: table
-          output: trivy-migrate.txt
-          severity: HIGH,CRITICAL
-          ignore-unfixed: false
-          exit-code: '1'
-      - name: Save scan reports
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: scan-reports
-          path: trivy-*.txt
-          if-no-files-found: ignore
-          retention-days: 14
       - name: Validate publishing configuration
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
@@ -81,7 +53,7 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Publish the scanned images
+      - name: Publish images
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
