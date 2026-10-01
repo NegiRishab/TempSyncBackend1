@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'feature/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test-build-scan:
+    environment: producion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Unit tests
+        run: npm test -- --runInBand
+      - name: Build application
+        run: npm run build
+      - name: Build application image locally
+        run: docker build --pull --target app --tag local/app:ci .
+      - name: Build matching migration image
+        run: docker build --target migrate --tag local/migrate:ci .
+      - name: Scan app image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: local/app:ci
+          scanners: vuln
+          format: table
+          output: trivy-app.txt
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '1'
+      - name: Scan migrate image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: local/migrate:ci
+          scanners: vuln
+          format: table
+          output: trivy-migrate.txt
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '1'
+      - name: Save scan reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: scan-reports
+          path: trivy-*.txt
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Validate publishing configuration
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          test -n "$DOCKERHUB_USERNAME" || { echo 'Set the DOCKERHUB_USERNAME repository variable'; exit 1; }
+          test -n "$DOCKERHUB_TOKEN" || { echo 'Set the DOCKERHUB_TOKEN repository secret'; exit 1; }
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Publish the scanned images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE }}
+        run: |
+          set -euo pipefail
+          namespace="${DOCKERHUB_NAMESPACE:-$DOCKERHUB_USERNAME}"
+          tag="sha-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          image="docker.io/$namespace/devsync-main:$tag"
+          docker tag local/app:ci "$image"
+          docker push "$image"
+          digest=$(docker image inspect "$image" --format '{{index .RepoDigests 0}}')
+          printf 'BACKEND_IMAGE=%s\n' "$digest" > release.env
+          migration="docker.io/$namespace/devsync-backend-migrate:$tag"
+          docker tag local/migrate:ci "$migration"
+          docker push "$migration"
+          migration_digest=$(docker image inspect "$migration" --format '{{index .RepoDigests 0}}')
+          printf 'BACKEND_MIGRATION_IMAGE=%s\n' "$migration_digest" >> release.env
+          printf 'COMMIT_SHA=%s\nIMAGE_TAG=%s\n' "$GITHUB_SHA" "$tag" >> release.env
+          cat release.env >> "$GITHUB_STEP_SUMMARY"
+      - name: Save deployment references for Jenkins
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-backend-${{ github.sha }}
+          path: release.env
+          retention-days: 30
+          if-no-files-found: error
