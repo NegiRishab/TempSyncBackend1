@@ -30,7 +30,7 @@ export class AuthService {
       },
       {
         secret: this.configService.get<string>("JWT_SECRET"),
-        expiresIn: `${this.configService.get<number>("JWT_EXPIRES_IN_HOURS")}h`,
+        expiresIn: `${this.configService.getOrThrow<number>("JWT_EXPIRES_IN_HOURS")}h`,
       },
     );
   }
@@ -49,7 +49,7 @@ export class AuthService {
       },
       {
         secret: this.configService.get<string>("JWT_SECRET"),
-        expiresIn: `${this.configService.get<number>("JWT_REFRESH_EXPIRES_IN_DAYS")}d`,
+        expiresIn: `${this.configService.getOrThrow<number>("JWT_REFRESH_EXPIRES_IN_DAYS")}d`,
       },
     );
   }

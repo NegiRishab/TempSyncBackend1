@@ -24,7 +24,6 @@
     "migration:revert": "npm run typeorm -- -d ./config/typeorm.config.ts migration:revert"
   },
   "dependencies": {
-    "@nestjs/cli": "^11.0.7",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.1",
     "@nestjs/core": "^11.0.1",
@@ -49,13 +48,13 @@
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "multer": "^2.0.1",
-    "nodemailer": "^7.0.3",
+    "nodemailer": "^10.0.13",
     "passport-jwt": "^4.0.1",
     "path": "^0.12.7",
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "sharp": "^0.33.5",
+    "sharp": "^0.35.5",
     "socket.io": "^4.8.1",
     "typeorm": "^0.3.21"
   },
@@ -85,7 +84,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "@nestjs/cli": "^11.0.7"
   },
   "jest": {
     "moduleFileExtensions": [

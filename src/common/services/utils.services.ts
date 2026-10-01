@@ -3,7 +3,8 @@ import * as bcrypt from "bcryptjs";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 // import * as _ from "lodash";
-import * as sharp from "sharp";
+// Sharp exposes a CommonJS function; its default type is resolved by this project's TS configuration.
+const sharp: typeof import("sharp").default = require("sharp");
 import * as moment from "moment";
 
 @Injectable()
@@ -52,7 +53,7 @@ export class UtilitiesServices {
       },
       {
         secret: this.configService.get<string>("JWT_SECRET"),
-        expiresIn: `${this.configService.get<number>("JWT_EXPIRES_IN_HOURS")}h`,
+        expiresIn: `${this.configService.getOrThrow<number>("JWT_EXPIRES_IN_HOURS")}h`,
       },
     );
   }

@@ -19,7 +19,7 @@ import { InvitationsModule } from "src/invitations/invitations.module";
       useFactory: (configService: ConfigService) => ({
         secret: configService.get("JWT_SECRET"),
         signOptions: {
-          expiresIn: `${configService.get("JWT_EXPIRES_IN_HOURS")}h`,
+          expiresIn: `${configService.getOrThrow<number>("JWT_EXPIRES_IN_HOURS")}h`,
         },
       }),
     }),
